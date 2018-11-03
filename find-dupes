@@ -10,7 +10,7 @@ fi
 files=()
 while IFS= read -d $'\0' -r f ; do
 	files+=("$f")
-done < <(find "$dir" -not -path '*/\.*' -not -path . -print0)
+done < <(find "$dir" -type f -not -path '*/\.*' -not -path . -print0)
 
 # find identical files
 identical_files=()
