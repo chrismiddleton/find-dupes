@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+for f in * ; do
+	for f2 in * ; do
+		if [ "x$f" != "x$f2" ] && diff -q "$f" "$f2" > /dev/null ; then
+			echo "$f and $f2 are identical"
+		fi
+	done
+done
