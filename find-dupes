@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+describe_identical_files () {
+	local f1="$1"
+	local f2="$2"
+	if [ "x$(dirname "$f1")" = "x$(dirname "$f2")" ] ; then
+		echo "$(dirname "$f1"): $(basename "$f1") and $(basename "$f2") are identical"
+	else
+		echo "$f1 and $f2 are identical"
+	fi
+}
+
 dir="$1"
 if [ "x$dir" = "x" ] ; then
 	dir=.
@@ -31,15 +41,9 @@ done
 # print out
 i=0
 while ((i < ${#identical_files[@]})) ; do
-	f1="${identical_files[$i]}"
-	i=$(($i + 1))
-	f2="${identical_files[$i]}"
-	if [ "x$(dirname "$f1")" = "x$(dirname "$f2")" ] ; then
-		echo "$(dirname "$f1"): $(basename "$f1") and $(basename "$f2") are identical"
-	else
-		echo "$f1 and $f2 are identical"
-	fi
-	i=$(($i + 1))
+	j=$(($i + 1))
+	describe_files "${identical_files[$i]" "${identical_files[$j]"
+	i=$(($i + 2))
 done
 
 # summarize
