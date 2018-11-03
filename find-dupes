@@ -16,7 +16,7 @@ if [ "x$dir" = "x" ] ; then
 fi
 
 # adapted from: https://stackoverflow.com/a/8214748/2407870
-# Note: the second "-not -path ." appears to be necessary if the target director is "."
+# Note: the second "-not -path ." appears to be necessary if the target directory is "."
 files=()
 while IFS= read -d $'\0' -r f ; do
 	files+=("$f")
