@@ -5,10 +5,38 @@ if [ "x$dir" = "x" ] ; then
 	dir=.
 fi
 
-for f in "$dir"/* ; do
-	for f2 in "$dir"/* ; do
-		if [ "x$f" != "x$f2" ] && diff -q "$f" "$f2" > /dev/null ; then
-			echo "$f and $f2 are identical"
+# adapted from: https://stackoverflow.com/a/8214748/2407870
+# Note: the second "-not -path ." appears to be necessary if the target director is "."
+files=()
+while IFS= read -d $'\0' -r f ; do
+	files+=("$f")
+done < <(find "$dir" -not -path '*/\.*' -not -path . -print0)
+
+# find identical files
+i=0
+while ((i < ${#files[@]})) ; do
+	j=$(($i + 1))
+	while ((j < ${#files[@]})) ; do
+		f_i="${files[$i]}"
+		f_j="${files[$j]}"
+		if diff -q "$f_i" "$f_j" > /dev/null ; then
+			f_i_name="$f_i"
+			f_j_name="$f_i_name"
+			if [ "x$(dirname "$f_i")" = "x$(dirname "$f_j")" ] ; then
+				echo "In $(dirname "$f_i"), $(basename "$f_i") and $(basename "$f_j") are identical"
+			else
+				echo "$f_i and $f_j are identical"
+			fi
+			identical_count=$((identical_count + 1))
 		fi
+		j=$(($j + 1))
 	done
+	i=$(($i + 1))
 done
+
+# summarize
+if ((identical_count > 0)) ; then
+	echo "Found $identical_count identical files"
+else
+	echo "No identical files found"
+fi
