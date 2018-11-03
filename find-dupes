@@ -56,7 +56,7 @@ while ((i < ${#files[@]})) ; do
 	while ((j < ${#files[@]})) ; do
 		f1="${files[$i]}"
 		f2="${files[$j]}"
-		if diff -q "$f1" "$f2" > /dev/null ; then
+		if diff -q "$f1" "$f2" > /dev/null 2>&1 ; then
 			identical_count=$((identical_count + 1))
 			describe_identical_files "$f1" "$f2" "$full" "$escape"
 		fi
