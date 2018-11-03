@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
-for f in * ; do
-	for f2 in * ; do
+dir="$1"
+if [ "x$dir" = "x" ] ; then
+	dir=.
+fi
+
+for f in "$dir"/* ; do
+	for f2 in "$dir"/* ; do
 		if [ "x$f" != "x$f2" ] && diff -q "$f" "$f2" > /dev/null ; then
 			echo "$f and $f2 are identical"
 		fi
