@@ -3,12 +3,38 @@
 describe_identical_files () {
 	local f1="$1"
 	local f2="$2"
-	if [ "x$(dirname "$f1")" = "x$(dirname "$f2")" ] ; then
+	local full="$3"
+	local escape="$4"
+	if [ "x$escape" = "x1" ] ; then
+		f1="$(printf '%q' "$f1")"
+		f2="$(printf '%q' "$f2")"
+	fi
+	if [ "x$full" != "x1" ] && [ "x$(dirname "$f1")" = "x$(dirname "$f2")" ] ; then
 		echo "$(dirname "$f1"): $(basename "$f1") and $(basename "$f2") are identical"
 	else
 		echo "$f1 and $f2 are identical"
 	fi
 }
+
+full=0
+escape=0
+while (($# > 0)) ; do
+	case "$1" in
+		--full)
+			full=1
+			;;
+		--escape)
+			escape=1
+			;;
+		--)
+			break
+			;;
+		*)
+			break
+			;;
+	esac
+	shift
+done
 
 dir="$1"
 if [ "x$dir" = "x" ] ; then
@@ -32,7 +58,7 @@ while ((i < ${#files[@]})) ; do
 		f2="${files[$j]}"
 		if diff -q "$f1" "$f2" > /dev/null ; then
 			identical_count=$((identical_count + 1))
-			describe_identical_files "$f1" "$f2"
+			describe_identical_files "$f1" "$f2" "$full" "$escape"
 		fi
 		j=$(($j + 1))
 	done
