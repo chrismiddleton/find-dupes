@@ -23,31 +23,23 @@ while IFS= read -d $'\0' -r f ; do
 done < <(find "$dir" -type f -not -path '*/\.*' -not -path . -print0)
 
 # find identical files
-identical_files=()
 i=0
+identical_count=0
 while ((i < ${#files[@]})) ; do
 	j=$(($i + 1))
 	while ((j < ${#files[@]})) ; do
 		f1="${files[$i]}"
 		f2="${files[$j]}"
 		if diff -q "$f1" "$f2" > /dev/null ; then
-			identical_files+=("$f1" "$f2")
+			identical_count=$((identical_count + 1))
+			describe_identical_files "$f1" "$f2"
 		fi
 		j=$(($j + 1))
 	done
 	i=$(($i + 1))
 done
 
-# print out
-i=0
-while ((i < ${#identical_files[@]})) ; do
-	j=$(($i + 1))
-	describe_files "${identical_files[$i]" "${identical_files[$j]"
-	i=$(($i + 2))
-done
-
 # summarize
-identical_count=$((${#identical_files[@]} / 2))
 if ((identical_count > 0)) ; then
 	echo "Found $identical_count pair of identical files"
 else
