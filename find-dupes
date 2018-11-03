@@ -67,7 +67,7 @@ done
 
 # summarize
 if ((identical_count > 0)) ; then
-	echo "Found $identical_count pair of identical files"
+	echo "Found $identical_count pairs of identical files"
 else
 	echo "No identical files found"
 fi
