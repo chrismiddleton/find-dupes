@@ -13,28 +13,37 @@ while IFS= read -d $'\0' -r f ; do
 done < <(find "$dir" -not -path '*/\.*' -not -path . -print0)
 
 # find identical files
+identical_files=()
 i=0
 while ((i < ${#files[@]})) ; do
 	j=$(($i + 1))
 	while ((j < ${#files[@]})) ; do
-		f_i="${files[$i]}"
-		f_j="${files[$j]}"
-		if diff -q "$f_i" "$f_j" > /dev/null ; then
-			f_i_name="$f_i"
-			f_j_name="$f_i_name"
-			if [ "x$(dirname "$f_i")" = "x$(dirname "$f_j")" ] ; then
-				echo "In $(dirname "$f_i"), $(basename "$f_i") and $(basename "$f_j") are identical"
-			else
-				echo "$f_i and $f_j are identical"
-			fi
-			identical_count=$((identical_count + 1))
+		f1="${files[$i]}"
+		f2="${files[$j]}"
+		if diff -q "$f1" "$f2" > /dev/null ; then
+			identical_files+=("$f1" "$f2")
 		fi
 		j=$(($j + 1))
 	done
 	i=$(($i + 1))
 done
 
+# print out
+i=0
+while ((i < ${#identical_files[@]})) ; do
+	f1="${identical_files[$i]}"
+	i=$(($i + 1))
+	f2="${identical_files[$i]}"
+	if [ "x$(dirname "$f1")" = "x$(dirname "$f2")" ] ; then
+		echo "In $(dirname "$f1"), $(basename "$f1") and $(basename "$f2") are identical"
+	else
+		echo "$f1 and $f2 are identical"
+	fi
+	i=$(($i + 1))
+done
+
 # summarize
+identical_count=$((${#identical_files[@]} / 2))
 if ((identical_count > 0)) ; then
 	echo "Found $identical_count identical files"
 else
