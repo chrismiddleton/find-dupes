@@ -35,7 +35,7 @@ while ((i < ${#identical_files[@]})) ; do
 	i=$(($i + 1))
 	f2="${identical_files[$i]}"
 	if [ "x$(dirname "$f1")" = "x$(dirname "$f2")" ] ; then
-		echo "In $(dirname "$f1"), $(basename "$f1") and $(basename "$f2") are identical"
+		echo "$(dirname "$f1"): $(basename "$f1") and $(basename "$f2") are identical"
 	else
 		echo "$f1 and $f2 are identical"
 	fi
@@ -45,7 +45,7 @@ done
 # summarize
 identical_count=$((${#identical_files[@]} / 2))
 if ((identical_count > 0)) ; then
-	echo "Found $identical_count identical files"
+	echo "Found $identical_count pair of identical files"
 else
 	echo "No identical files found"
 fi
