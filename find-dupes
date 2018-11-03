@@ -52,8 +52,14 @@ done < <(find "$dir" -type f -not -path '*/\.*' -not -path . -print0)
 i=0
 identical_count=0
 while ((i < ${#files[@]})) ; do
+	if ! [ -e "${files[$i]}" ] ; then
+		continue
+	fi
 	j=$(($i + 1))
 	while ((j < ${#files[@]})) ; do
+		if ! [ -e "${files[$j]}" ] ; then
+			continue
+		fi
 		f1="${files[$i]}"
 		f2="${files[$j]}"
 		if diff -q "$f1" "$f2" > /dev/null 2>&1 ; then
