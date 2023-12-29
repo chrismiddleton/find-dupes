@@ -118,7 +118,7 @@ identical_count_str="$(echo "$result" | sed '/^\s*$/d' | wc -l)"
 identical_count=$(expr $identical_count_str + 0)
 
 if ((identical_count > 0)) ; then
-	echo "Identical files:"
+	printf "Identical files:\n\n"
 	echo "$result" | sort -f | sed -E 's/^(.*)\|\|\|\|(.*)$/\1\n\2\n/g'    
 	echo "Found $identical_count pairs of identical files"
 else
