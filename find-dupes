@@ -1,29 +1,5 @@
 #!/usr/bin/env bash
 
-describe_identical_files () {
-	local dir="$1"
-	local f1="$2"
-	local f2="$3"
-	local full="$4"
-	local escape="$5"
-	if [ "x$escape" = "x1" ] ; then
-		f1="$(printf '%q' "$f1")"
-		f2="$(printf '%q' "$f2")"
-	fi
-	local dir_escaped="$(echo "$dir" | sed -e 's/[]\/$*.^[]/\\&/g')"
-	local f1_relative="$(echo "$f1" | sed 's/^'"$dir_escaped"'//g' | sed 's/^\///g')"
-	local f2_relative="$(echo "$f2" | sed 's/^'"$dir_escaped"'//g' | sed 's/^\///g')"
-	echo "Identical:"
-	printf "%s\n" "$f1_relative"
-	printf "%s\n" "$f2_relative"
-	echo
-	# if [ "x$full" != "x1" ] && [ "x$(dirname "$f1")" = "x$(dirname "$f2")" ] ; then
-	# 	echo "$(dirname "$f1"): $(basename "$f1") and $(basename "$f2") are identical"
-	# else
-	# 	echo "$f1 and $f2 are identical"
-	# fi
-}
-
 full=0
 escape=0
 extra_find_args=()
@@ -86,8 +62,6 @@ find_identical_files() {
 	local identical_count=0
 	local j=0
 	local dir_escaped="$(echo "$dir" | sed -e 's/[]\/$*.^[]/\\&/g')"
-	local f1_relative=
-	local f2_relative=
 	while ((i < ${#files[@]})) ; do
         	if ! [ -e "${files[$i]}" ] ; then
 			i=$(($i + 1))
@@ -102,9 +76,15 @@ find_identical_files() {
         	        f2="${files[$j]}"
         	        if diff -q "$f1" "$f2" > /dev/null 2>&1 ; then
         	                identical_count=$((identical_count + 1))
-				f1_relative="$(echo "$f1" | sed 's/^'"$dir_escaped"'//g' | sed 's/^\///g')"
-        			f2_relative="$(echo "$f2" | sed 's/^'"$dir_escaped"'//g' | sed 's/^\///g')"
-				echo "$f1_relative||||$f2_relative"
+				if [ "x$full" != "x1" ] ; then
+					f1="$(echo "$f1" | sed 's/^'"$dir_escaped"'//g' | sed 's/^\///g')"
+        				f2="$(echo "$f2" | sed 's/^'"$dir_escaped"'//g' | sed 's/^\///g')"
+				fi
+				if [ "x$escape" = "x1" ] ; then
+          				f1="$(printf '%q' "$f1")"
+                			f2="$(printf '%q' "$f2")"
+       				fi
+				echo "$f1||||$f2"
         	        fi
         	        j=$(($j + 1))
         	done
