@@ -64,6 +64,8 @@ if [ "x$dir" = "x" ] ; then
 	dir=.
 fi
 
+dir="$(cd "$dir"; pwd)"
+
 find_command=(find "$dir" -type f -not -path '*/\.*' -not -path . "${extra_find_args[@]}" -print0)
 
 # adapted from: https://stackoverflow.com/a/8214748/2407870
@@ -83,6 +85,9 @@ find_identical_files() {
 	local i=0
 	local identical_count=0
 	local j=0
+	local dir_escaped="$(echo "$dir" | sed -e 's/[]\/$*.^[]/\\&/g')"
+	local f1_relative=
+	local f2_relative=
 	while ((i < ${#files[@]})) ; do
         	if ! [ -e "${files[$i]}" ] ; then
 			i=$(($i + 1))
@@ -97,8 +102,9 @@ find_identical_files() {
         	        f2="${files[$j]}"
         	        if diff -q "$f1" "$f2" > /dev/null 2>&1 ; then
         	                identical_count=$((identical_count + 1))
-				echo "$f1||||$f2"
-        	                # describe_identical_files "$dir" "$f1" "$f2" "$full" "$escape"
+				f1_relative="$(echo "$f1" | sed 's/^'"$dir_escaped"'//g' | sed 's/^\///g')"
+        			f2_relative="$(echo "$f2" | sed 's/^'"$dir_escaped"'//g' | sed 's/^\///g')"
+				echo "$f1_relative||||$f2_relative"
         	        fi
         	        j=$(($j + 1))
         	done
