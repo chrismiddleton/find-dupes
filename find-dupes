@@ -73,31 +73,47 @@ while IFS= read -d $'\0' -r f ; do
 	files+=("$f")
 done < <("${find_command[@]}")
 
-# find identical files
-i=0
-identical_count=0
-while ((i < ${#files[@]})) ; do
-	if ! [ -e "${files[$i]}" ] ; then
-		continue
-	fi
-	j=$(($i + 1))
-	while ((j < ${#files[@]})) ; do
-		if ! [ -e "${files[$j]}" ] ; then
-			continue
-		fi
-		f1="${files[$i]}"
-		f2="${files[$j]}"
-		if diff -q "$f1" "$f2" > /dev/null 2>&1 ; then
-			identical_count=$((identical_count + 1))
-			describe_identical_files "$dir" "$f1" "$f2" "$full" "$escape"
-		fi
-		j=$(($j + 1))
+find_identical_files() {
+	local dir="$1"
+	local full="$2"
+	local escape="$3"
+	shift
+	local files=("$@")
+	# find identical files
+	local i=0
+	local identical_count=0
+	local j=0
+	while ((i < ${#files[@]})) ; do
+        	if ! [ -e "${files[$i]}" ] ; then
+			i=$(($i + 1))
+                	continue
+        	fi
+        	j=$(($i + 1))
+        	while ((j < ${#files[@]})) ; do
+        	        if ! [ -e "${files[$j]}" ] ; then
+        	                continue
+        	        fi
+        	        f1="${files[$i]}"
+        	        f2="${files[$j]}"
+        	        if diff -q "$f1" "$f2" > /dev/null 2>&1 ; then
+        	                identical_count=$((identical_count + 1))
+				echo "$f1||||$f2"
+        	                # describe_identical_files "$dir" "$f1" "$f2" "$full" "$escape"
+        	        fi
+        	        j=$(($j + 1))
+        	done
+        	i=$(($i + 1))
 	done
-	i=$(($i + 1))
-done
+}
 
-# summarize
+result="$(find_identical_files "$dir" "$full" "$escape" "${files[@]}")"
+
+identical_count_str="$(echo "$result" | wc -l)"                                                                                                                                                                                          
+identical_count=$(expr $identical_count_str + 0)
+
 if ((identical_count > 0)) ; then
+	echo "Identical files:"
+	echo "$result" | sort -f | sed -E 's/^(.*)\|\|\|\|(.*)$/\1\n\2\n/g'    
 	echo "Found $identical_count pairs of identical files"
 else
 	echo "No identical files found"
