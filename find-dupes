@@ -58,9 +58,6 @@ fi
 
 find_command=(find "$dir" -type f -not -path '*/\.*' -not -path . "${extra_find_args[@]}" -print0)
 
-echo "Finding files..."
-printf "%s\n" "${find_command[*]}"
-
 # adapted from: https://stackoverflow.com/a/8214748/2407870
 # Note: the second "-not -path ." appears to be necessary if the target directory is "."
 files=()
