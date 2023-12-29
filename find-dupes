@@ -18,35 +18,55 @@ describe_identical_files () {
 
 full=0
 escape=0
+extra_find_args=()
+positional_args=()
 while (($# > 0)) ; do
 	case "$1" in
 		--full)
 			full=1
+			shift
 			;;
 		--escape)
 			escape=1
+			shift
+			;;
+		--exclude|-x)
+			shift
+			extra_find_args+=(-not -path "$1")
+			shift
 			;;
 		--)
 			break
 			;;
 		*)
-			break
+			positional_args+=("$1")
+			shift
 			;;
 	esac
-	shift
 done
 
-dir="$1"
+if [ ${#positional_args[@]} -gt 1 ] ; then
+	echo "Too many positional arguments" >&2
+	exit 1
+fi
+
+dir="${positional_args[0]}"
+
 if [ "x$dir" = "x" ] ; then
 	dir=.
 fi
+
+find_command=(find "$dir" -type f -not -path '*/\.*' -not -path . "${extra_find_args[@]}" -print0)
+
+echo "Finding files..."
+printf "%s\n" "${find_command[*]}"
 
 # adapted from: https://stackoverflow.com/a/8214748/2407870
 # Note: the second "-not -path ." appears to be necessary if the target directory is "."
 files=()
 while IFS= read -d $'\0' -r f ; do
 	files+=("$f")
-done < <(find "$dir" -type f -not -path '*/\.*' -not -path . -print0)
+done < <("${find_command[@]}")
 
 # find identical files
 i=0
