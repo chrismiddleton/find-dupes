@@ -62,14 +62,18 @@ find_identical_files() {
 	local identical_count=0
 	local j=0
 	local dir_escaped="$(echo "$dir" | sed -e 's/[]\/$*.^[]/\\&/g')"
+	local dupe_files=()
+	local dupe_file_groups=()
+	local n=1
 	while ((i < ${#files[@]})) ; do
         	if ! [ -e "${files[$i]}" ] ; then
-			i=$(($i + 1))
+			i=$((i + 1))
                 	continue
         	fi
-        	j=$(($i + 1))
+        	j=$((i + 1))
         	while ((j < ${#files[@]})) ; do
         	        if ! [ -e "${files[$j]}" ] ; then
+				j=$((j + 1))
         	                continue
         	        fi
         	        f1="${files[$i]}"
@@ -84,11 +88,76 @@ find_identical_files() {
           				f1="$(printf '%q' "$f1")"
                 			f2="$(printf '%q' "$f2")"
        				fi
-				echo "$f1||||$f2"
+				dupe_files+=("$f1")
+				dupe_files+=("$f2")
+				dupe_file_groups+=("$n" "$n")
+				n=$((n + 1))
         	        fi
-        	        j=$(($j + 1))
+        	        j=$((j + 1))
         	done
-        	i=$(($i + 1))
+        	i=$((i + 1))
+	done
+	local last_group=$n
+	
+	# combine groups
+	i=0
+	j=0
+	local k=0
+	local gi=0
+	local gj=0
+	local gk=0
+	while ((i < ${#dupe_files[@]})) ; do
+		j=$((i + 1))
+		while ((j < ${#dupe_files[@]})) ; do
+			# skip if they're already in the same group
+			gi=${dupe_file_groups[$i]}
+			gj=${dupe_file_groups[$j]}
+			if [ $gi -eq $gj ] ; then
+				j=$((j + 1))
+				continue
+			fi
+			# check if they are the same file and not yet in the same group
+			if [ "${dupe_files[$i]}" = "${dupe_files[$j]}" ] ; then
+				k=0
+				while ((k < ${#dupe_files[@]})) ; do
+					if [ $k -eq $i ] || [ $k -eq $j ] ; then
+						k=$((k + 1))
+						continue
+					fi
+					gk=${dupe_file_groups[$k]}
+					# fdo
+					if [ $gj -eq $gk ] ; then
+						dupe_file_groups[$k]=$gi
+					fi
+					k=$((k + 1))
+				done
+				dupe_file_groups[$j]=$gi
+			fi
+			j=$((j + 1))
+		done
+		i=$((i + 1))
+	done
+	local n=1
+	local joined=
+	local full_groups=()
+	while [ $n -le $last_group ] ; do
+		joined=
+		i=0
+		while ((i < ${#dupe_files[@]})) ; do
+			if [ ${dupe_file_groups[$i]} -eq $n ] ; then
+				joined="${joined}||||${dupe_files[$i]}"
+			fi
+			i=$((i + 1))
+		done
+		# remove the delimiter
+		if ! [ -z "$joined" ] ; then
+			joined="${joined:4}"
+			full_groups+=("$joined")
+		fi
+		n=$((n + 1))
+	done
+	for full_group in "${full_groups[@]}" ; do
+		echo "$full_group" | sed -E 's/\|\|\|\|/\n/g' | sort | uniq | tr '\n' '\t' | sed -E 's/\t/\|\|\|\|/g' | sed -E 's/$/\n/g'
 	done
 }
 
@@ -99,8 +168,8 @@ identical_count=$(expr $identical_count_str + 0)
 
 if ((identical_count > 0)) ; then
 	printf "Identical files:\n\n"
-	echo "$result" | sort -f | sed -E 's/^(.*)\|\|\|\|(.*)$/\1\n\2\n/g'    
-	echo "Found $identical_count pairs of identical files"
+	echo "$result" | sort -f | tr '\n' '\t' | sed -E 's/\t/\n\n/g' | sed -E 's/\|\|\|\|/\n/g' | tr '\n' '\t' | sed 's/\t\t\t/\t\t/g' | tr '\t' '\n'
+	echo "Found $identical_count groups of identical files"
 else
 	echo "No identical files found"
 fi
